@@ -1,0 +1,43 @@
+#Architecture to be use options: SLU, SLU_Hybrid, SLU_WCN
+network: "SLU"
+
+#Location of the individual partitions, either manual or ASR generated
+train_set: "..path/to/SLURP/trainset"
+dev_set: "..path/to/SLURP/devset"
+test_set: "..path/to/SLURP/testset"
+
+#Location of the acoustic embeddings 
+load_acoutics: False
+eval_kaldi_embeddings: False  
+#If Kaldi embeddings are TRUE, then the pat must point to KALDI embeddings , and adjut the dimensionality for acoustic_dim below
+acoustic_embeddings_train: "path/to/train/acoustic/embeddings/slurp_embeddings"
+acoustic_embeddings_dev: "path/to/dev/acoustic/embeddings/slurp_embeddings"
+acoustic_embeddings_test: "path/to/test/acoustic/embeddings/testset/slurp_embeddings"
+acoustic_embeddings_train_dev: "path/to/train_dev/acoustic/embeddings//train_dev_set/slurp_embeddings"
+
+#LOCATION OF THE WCN files
+eval_wcn: False
+train_WCN_file: "path/to/train_adapted_wcn_ids"
+dev_WCN_file: "path/to/devel_adapted_wcn_ids"
+test_WCN_file: "pah/to/test_adapted_wcn_ids"
+
+#Parameters for the textual and acoustic embeddings dimensionality [BERT-768] [HUBERT - 768] [KALDI - 1024]
+#These will be used if the cross-modal SLU_Hybrid experiment is ON
+text_dim: 768
+acoustic_dim: 768  
+
+#Parameters for the original HERMIT Text-Based
+units: [200]
+dropout: [0.8]
+batch_size: [256]
+optimizer: ["adamw"]
+loss: ["categorical_crossentropy"]
+epochs: 200
+patience: 10
+#GPU parameters for DPP
+distributed: True
+num_jobs: 8
+gpu: '0'
+#Output folder 
+run_folder: name_of_output_folder
+monitor: ["f1"]
