@@ -62,7 +62,7 @@ class CustomTextAudioDataset(Dataset):
         self.use_wcn = use_wcn
         self.load_acoustic_info = load_acoustic_info
         self.kaldi_embeddings = kaldi_embeddings
-        if self.use_wcn == True:
+        if self.use_wcn is True:
             self.model_class, self.tokenizer_class, self.pretrained_weights = (
                 BertModel,
                 BertTokenizer,
@@ -133,8 +133,8 @@ class CustomTextAudioDataset(Dataset):
 
         # getting the textual, acoustic embeddings for the batches
         text_embeddings, mask = self.__get_text_embedding(textual_feats)
-        if self.load_acoustic_info == True:
-            if self.kaldi_embeddings == True:  # True means Kaldi based embeddings
+        if self.load_acoustic_info is True:
+            if self.kaldi_embeddings is True:  # True means Kaldi based embeddings
                 (
                     not_found_idx,
                     acoustic_embeddings,
@@ -149,7 +149,7 @@ class CustomTextAudioDataset(Dataset):
             acoustic_embeddings = None
 
         # EMBEDDINGS
-        if acoustic_embeddings != None:
+        if acoustic_embeddings is not None:
             text_embeddings = text_embeddings.numpy()
             acoustic_embeddings = acoustic_embeddings.numpy()
         else:
@@ -161,7 +161,7 @@ class CustomTextAudioDataset(Dataset):
         mask = mask.numpy()
         # BATCH OUTPUT
         X_batch = [text_embeddings, acoustic_embeddings, mask]
-        if self.use_wcn == True:
+        if self.use_wcn is True:
             WCN_batch = [in_seqs, batch_pos, batch_score]
         else:
             WCN_batch = None
@@ -173,7 +173,7 @@ class CustomTextAudioDataset(Dataset):
 
         return X_batch, Y_batch, WCN_batch
 
-    # this method helps to eliminate those instances from the batch that don't have acoustic embeddings
+    # Function to eliminate those instances from the batch that don't have acoustic embeddings
     def __slice_tensor(self, tensor, indexes):
         update_index_val = 0
         tensor_copy = tensor
@@ -412,9 +412,11 @@ class SLURP_Dataset(object):
 
     def __read_wcn_data(self, fn):
         """
-        * fn: wcn data file name
-        * line format - word:parent:sibling:type ... \t<=>\tword:pos:score word:pos:score ... \t<=>\tlabel1;label2...
-        * system act <=> utterance <=> labels
+        Read_WCN function.
+        Args:
+            fn: wcn data file name
+            line format - word:parent:sibling:type ... \t<=>\tword:pos:score word:pos:score ... \t<=>\tlabel1;label2...
+            system act <=> utterance <=> labels
         """
         wcn_dict = {}
         in_seqs = []
@@ -470,11 +472,11 @@ class SLURP_Dataset(object):
         return wcn_dict
 
     def __get_WCN(self, id, isTrain, isDev, isTest):
-        if isTrain == True:
+        if isTrain is True:
             return self.train_WCN_dict[id]
-        elif isDev == True:
+        elif isDev is True:
             return self.dev_WCN_dict[id]
-        elif isTest == True:
+        elif isTest is True:
             return self.test_WCN_dict[id]
 
     # Main method for reading the data in XML format
@@ -525,7 +527,7 @@ class SLURP_Dataset(object):
             self.max_sentence_length = sentence_length
         huric_example["sentence_length"] = sentence_length
 
-        ## creates empty arrays
+        # creates empty arrays
         ner_annotations = np.full(sentence_length, fill_value="O", dtype="object")
         dialogue_act_annotations = np.full(
             sentence_length, fill_value="O", dtype="object"
@@ -548,7 +550,7 @@ class SLURP_Dataset(object):
             ] = frame_element.attrib["value"]
 
         # If the flag of WCN is on, we read the WNC files
-        if use_WCN == True:
+        if use_WCN is True:
             huric_example["wcn"] = self.__get_WCN(
                 os.path.basename(input_file), is_train_set, is_dev_set, is_test_set
             )
@@ -563,12 +565,10 @@ class SLURP_Dataset(object):
                 frame_annotations,
                 frame_element_annotations,
             )
-            tokenized_length = len(
-                tokenized_sentence
-            )  # I'm adding 4 given that every sentence has <s> and <\s> tokens at the begining and the end of the sentence [CLS] and [SEP] are added during tokenization.
+            tokenized_length = len(tokenized_sentence)
         else:
             huric_example["wcn"] = None
-            ##This line works for HERMIT original
+            # This line works for HERMIT original
             (
                 huric_example["ner"],
                 huric_example["dialogue_act"],
@@ -657,7 +657,7 @@ class SLURP_Dataset(object):
         frame_e_labels.extend(["AAA_PAD"])
         for word, ner_label, da_label, fr_label, fre_label in zip(
             sentence, ner, da, frame, frame_e
-        ):  # text_labels):
+        ):
             # Tokenize the word and count # of subwords the word is broken into
             tokenized_word = self.tokenizer.tokenize(word)
             n_subwords = len(tokenized_word)
@@ -672,12 +672,11 @@ class SLURP_Dataset(object):
                 frame_e_labels.extend([fre_label] * n_subwords)
             else:
                 # NER
-                if (
-                    "B" in ner_label.split("-")[0]
-                ):  # this is a particular case for words at the Begining being splited, only the first
-                    ner_labels.extend(
-                        [ner_label]
-                    )  # subword gets the B label, and the rest are considered as Inside (I) elements
+                if "B" in ner_label.split("-")[0]:
+                    # Particular case for words at the Begining being splited, only the first
+                    # subword gets the B label, and the rest are considered as Inside (I)
+                    # elements
+                    ner_labels.extend([ner_label])
                     ner_label = ner_label.replace("B-", "I-")
                     ner_labels.extend([ner_label] * (n_subwords - 1))
                 else:
@@ -729,17 +728,13 @@ class SLURP_Dataset(object):
             )
             sentence_array = sentence_array.tolist()
             sentence_array.reverse()
-            for i in range(
-                0, len(sentence_array)
-            ):  # --> previous (self.max_tokenized_length - len(sentence_array), self.max_tokenized_length):
+            for i in range(0, len(sentence_array)):
                 tokens[i] = sentence_array.pop()
             tokens = np.asarray(tokens)
             features.append(tokens)
             # Getting headset audios IF required
             if load_acoustics:
-                headset_audios = [
-                    sentence["audio_file"]
-                ]  # self.__get_headset_audiosIds(sentence['audio_file'])
+                headset_audios = [sentence["audio_file"]]
                 if len(headset_audios) > 1:
                     features.append(headset_audios)
                 else:
@@ -751,16 +746,6 @@ class SLURP_Dataset(object):
                 features.append(sentence["wcn"])
 
             for label in self.labels:
-                # PREVIOUS version
-                # label_vector.append(to_categorical(pad_sequences([self.label_encoders[label].transform(sentence[label])],
-                #                                                 maxlen=self.max_tokenized_length),
-                #                                   num_classes=len(self.label_encoders[label].classes_)))
-                #
-                # This version does a categorical representation of the classes
-                """label_vector.append(self.to_categorical(self.pad_sequences([self.label_encoders[label].transform(sentence[label])],
-                              maxlen=self.max_tokenized_length,reverse_order=False),
-                num_classes=len(self.label_encoders[label].classes_)))"""
-                # This version does a non-categorical representation of clases, instead a INT number is defined for each label
                 if network_type == "SLU":
                     label_vector.append(
                         self.pad_sequences(
@@ -885,8 +870,6 @@ class SLURP_Dataset(object):
         load_acoustic_info=False,
         use_kaldi_embeddings=False,
     ):
-        examples = []
-
         self.encoders_path = os.path.join("resources", run_folder, "encoders")
         if not os.path.exists(self.encoders_path):
             os.makedirs(self.encoders_path)
@@ -1081,7 +1064,8 @@ class SLURP_Dataset(object):
         for label in self.labels:
             bag_of_labels = set()
             bag_of_labels.add("AAA_PAD")
-            # This IF controls the labels for DA and Intent. These are treat as clases and not sequence labeling
+            # This IF controls the labels for DA and Intent.
+            # These are treat as clases and not sequence labeling
             if label != "frame" and label != "dialogue_act":
                 for sentence in self.dataset:
                     for l in sentence[label]:
@@ -1174,14 +1158,10 @@ class SLURP_Dataset(object):
         self, labels_array, maxlen=None, pad_value=-1, reverse_order=True, dtype="int32"
     ):
         padded_sequence = np.full((maxlen), pad_value, dtype=dtype)
-        # padded_sequence = np.zeros(shape=(maxlen), dtype=dtype)
         if reverse_order:
             padded_sequence[-(len(labels_array[0])) :] = labels_array[0]
-
-            # return np.roll(padded_sequence,-1)
         else:
             padded_sequence[: len(labels_array[0])] = labels_array[0]
-            # return np.roll(padded_sequence, 1)
         return padded_sequence
 
     def to_categorical(self, y, num_classes=None, dtype="float32"):

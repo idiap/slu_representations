@@ -37,10 +37,8 @@ def reshape_for_training(dataset):
         Y.append([])
     for example in dataset:
         for i in range(len(example[0])):
-            # print(example[0][i])
             X[i].append(example[0][i])
         for i in range(len(example[1])):
-            # print(example[1][i])
             Y[i].append(example[1][i])
     return X, Y
 
@@ -55,8 +53,8 @@ def unpadv2(gold, prediction, label_encoders=None):
         for y_true_i, y_pred_i in zip(gold_standard, predicted):
             new_true = []
             new_pred = []
-            # This loop actually works for omitting the first and last tokens of the predicted vector
-            # aligned with the CLS and SEP tokens
+            # This loop actually works for omitting the first and last tokens of the predicted
+            # vector aligned with the CLS and SEP tokens
             # temp_y_true_i = y_true_i[y_true_i!=0]
             # assert len(temp_y_true_i) == len(y_pred_i),\
             #    f"ERROR: Size of true labels and predicted labels are different"
