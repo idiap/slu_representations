@@ -27,6 +27,8 @@ We perform an exhaustive evaluation of different representations to address the 
 ----
 ## Distributed Learning
 
+This code was designed and prepared to work through Idiap's Sun's Grid Engine. Keep in mind that if you want to use this code in a single GPU, you'll need to make the proper modifications. 
+
 ----
 ## Citation
 
