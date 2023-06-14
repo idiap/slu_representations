@@ -24,7 +24,6 @@ NOTICE: This code has been modified and adapted from the original
 import os
 import xml.etree.ElementTree as et
 from collections import OrderedDict
-from unicodedata import name
 
 import kaldiio
 import numpy as np
@@ -102,8 +101,8 @@ class CustomTextAudioDataset(Dataset):
         if self.load_acoustic_info:
             audio_file.append(
                 self.features[idx][2]
-            )  ## corresponds to the audio files to be loaded
-        if self.use_wcn == True:
+            )  # corresponds to the audio files to be loaded
+        if self.use_wcn is True:
             (
                 in_seqs,
                 pos_seqs,
@@ -115,14 +114,14 @@ class CustomTextAudioDataset(Dataset):
                 labels,
             ) = self.features[idx][3]
             cls = True
-            ##vector of the positions CLS is considered at the beggining of the sequence
+            # vector of the positions CLS is considered at the beggining of the sequence
             batch_pos = (
                 [1] * cls
                 + [p + int(cls) for p in pos_seqs]
                 + [0] * (self.max_length - len(pos_seqs) - 1)
             )
             batch_pos = np.array(batch_pos)  # torch.LongTensor(batch_pos)
-            ##vector of the scores CLS is considered at the beggining of the sequence
+            # vector of the scores CLS is considered at the beggining of the sequence
             batch_score = (
                 [1] * cls + score_seqs + [-1] * (self.max_length - len(score_seqs) - 1)
             )
@@ -142,14 +141,14 @@ class CustomTextAudioDataset(Dataset):
                 ) = self.__get_batch_acoustic_embeddings(
                     audio_file, self.acoustic_features_file
                 )
-            else:  ## ELSE means HUBERT based Embeddings
+            else:  # ELSE means HUBERT based Embeddings
                 acoustic_embeddings = self.__get_batch_acoustic_embeddings_hubert_based(
                     audio_file, self.acoustic_features_file
                 )
         else:
             acoustic_embeddings = None
 
-        ## EMBEDDINGS
+        # EMBEDDINGS
         if acoustic_embeddings != None:
             text_embeddings = text_embeddings.numpy()
             acoustic_embeddings = acoustic_embeddings.numpy()
@@ -160,7 +159,7 @@ class CustomTextAudioDataset(Dataset):
         fr_labels = np.array(fr_labels)
         fr_e_labels = np.array(fr_e_labels)
         mask = mask.numpy()
-        ## BATCH OUTPUT
+        # BATCH OUTPUT
         X_batch = [text_embeddings, acoustic_embeddings, mask]
         if self.use_wcn == True:
             WCN_batch = [in_seqs, batch_pos, batch_score]
@@ -174,7 +173,7 @@ class CustomTextAudioDataset(Dataset):
 
         return X_batch, Y_batch, WCN_batch
 
-    ## this method helps to eliminate those instances from the batch that don't have acoustic embeddings
+    # this method helps to eliminate those instances from the batch that don't have acoustic embeddings
     def __slice_tensor(self, tensor, indexes):
         update_index_val = 0
         tensor_copy = tensor
@@ -235,16 +234,6 @@ class CustomTextAudioDataset(Dataset):
         except:
             not_found.append(counter)
 
-        """for audio_files in audio_files_list:
-            try:               
-                rows = df.loc[df['utt'].isin(audio_files)]
-                utt, ark = rows.iloc[0]  ## we always keep the first one 
-                acoustic_inputs.append(' '.join([utt, ark]))
-
-            except:
-                not_found.append(counter)              
-            counter+=1"""
-
         del df  # cleaning up memory
         if len(acoustic_inputs) != 0:
             embeddings = self.__get__scp_minibatch(acoustic_inputs)
@@ -286,8 +275,10 @@ class SLURP_Dataset(object):
     max_sentence_length = (
         0  # This valiable will contain the maximum lentgh (num_words) of the utterances
     )
-    max_tokenized_length = 0  ## This valiable will contain the maximum lentgh (num_BERT_Tokens) of the utterances
-    # SAMPLES FOR THE DPP
+    # This valiable will contain the maximum lentgh (num_BERT_Tokens) of the utterances
+    max_tokenized_length = 0
+
+    # SAMPLER OBJECTS FOR THE DPP
     samplerTrain = None
     samplerLargeTrain = None
 
@@ -312,7 +303,7 @@ class SLURP_Dataset(object):
         load_acoustics=False,
         is_DPP=False,
     ):
-        if use_wcn == True:
+        if use_wcn is True:
             print("\nLoading Word Consensus Networks...")
             self.train_WCN_dict = self.__read_wcn_data(train_wcn)
             self.dev_WCN_dict = self.__read_wcn_data(dev_wcn)
@@ -328,7 +319,7 @@ class SLURP_Dataset(object):
             self.pre_trained_model = self.model_class.from_pretrained(
                 self.pretrained_weights
             )
-            ## ADDING SPECIAL TOKENS TO BERT TOKENIZER [<s>, </s>, <eps>]
+            # ADDING SPECIAL TOKENS TO BERT TOKENIZER [<s>, </s>, <eps>]
             self.tokenizer.add_special_tokens(
                 {"bos_token": Constants.BOS_WORD, "eos_token": Constants.EOS_WORD}
             )
@@ -486,7 +477,7 @@ class SLURP_Dataset(object):
         elif isTest == True:
             return self.test_WCN_dict[id]
 
-    ### Main method for reading the data in XML format
+    # Main method for reading the data in XML format
     def __import_example_with_BERT_tokenization(
         self,
         input_file,
@@ -756,7 +747,7 @@ class SLURP_Dataset(object):
                         sentence["audio_file"]
                     )  # IF NO HEADSET audio, then use the far-field audio
 
-            if use_WCN == True:
+            if use_WCN is True:
                 features.append(sentence["wcn"])
 
             for label in self.labels:
@@ -838,7 +829,7 @@ class SLURP_Dataset(object):
             masks.append(torch.tensor(instance[0][2]))
             if (
                 load_acoustics and instance[0][1] is not None
-            ):  ## Checking if the acoustic embedding compoment in not None
+            ):  # Checking if the acoustic embedding compoment in not None
                 acoustic_embeddings.append(
                     torch.Tensor.squeeze_(torch.tensor(instance[0][1]))
                 )
@@ -846,7 +837,7 @@ class SLURP_Dataset(object):
             intent_classes.append(instance[1]["frame"])
             slots_classes.append(instance[1]["frame_element"])
             # commented for WCN
-            if use_wcn == True:
+            if use_wcn is True:
                 raw_seqs.append(instance[2][0])
                 batch_pos.append(instance[2][1])
                 batch_scores.append(instance[2][2])
@@ -858,7 +849,7 @@ class SLURP_Dataset(object):
         list_of_masks = torch.cat(masks)
         # commented for WCN
 
-        if use_wcn == True:
+        if use_wcn is True:
             batch_pos = torch.LongTensor(np.array(batch_pos))
             batch_scores = torch.FloatTensor(np.array(batch_scores))
         da_labels = torch.LongTensor(np.array(dialogue_act_classes))
@@ -866,7 +857,7 @@ class SLURP_Dataset(object):
         fr_e_labels = torch.LongTensor(np.array(slots_classes))
 
         X_batch = [textual_embeddings, audio_embeddings, list_of_masks]
-        if use_wcn == True:
+        if use_wcn is True:
             WCN_batch = [list(raw_seqs), np.array(batch_pos), np.array(batch_scores)]
         else:
             WCN_batch = (
@@ -944,17 +935,6 @@ class SLURP_Dataset(object):
             batch_size=batch_size,
             sampler=self.samplerTrain,
         )
-
-        # for idx, batch in enumerate(Train_DL):
-        # BATCH comes like this:
-        # [ //start
-        #  [[textEmbeddings][acousticembeddings][mask]]
-        #  [['dialogue_act']['frame']['frame_element']]
-        #  [[in_seqs] [batch_pos] [batch_score]]
-        # ]//end
-        # print(idx)
-        # data,labels,WCN_data = batch
-        #    print(labels)
 
         # DEVELOPMENT
         dev_feats, dev_labels = self.__get_features_and_labels_from_set(
@@ -1101,7 +1081,7 @@ class SLURP_Dataset(object):
         for label in self.labels:
             bag_of_labels = set()
             bag_of_labels.add("AAA_PAD")
-            ##This IF controls the labels for DA and Intent. These are treat as clases and not sequence labeling
+            # This IF controls the labels for DA and Intent. These are treat as clases and not sequence labeling
             if label != "frame" and label != "dialogue_act":
                 for sentence in self.dataset:
                     for l in sentence[label]:
@@ -1148,6 +1128,10 @@ class SLURP_Dataset(object):
                 )
 
     def generate_label_encoders_for_seqs(self, save_encoders=False):
+        """
+        Function that generates the encoding of the labels for each of the classification
+        tasks present in the dataset
+        """
         for label in self.labels:
             bag_of_labels = set()
             bag_of_labels.add("AAA_PAD")
@@ -1203,412 +1187,6 @@ class SLURP_Dataset(object):
     def to_categorical(self, y, num_classes=None, dtype="float32"):
         """1-hot encodes a tensor"""
         return np.eye(num_classes, dtype=dtype)[y]
-
-    def compute_random_baseline(self):
-        from learning.metrics.sequence_labeling import classification_report
-
-        np.random.seed(42)
-        distribution = self.statistics()
-        self.generate_label_encoders()
-        dialogue_act_labels = self.label_encoders["dialogue_act"].classes_
-        frame_labels = self.label_encoders["frame"].classes_
-        frame_element_labels = self.label_encoders["frame_element"].classes_
-
-        dialogue_act_labels = np.delete(
-            dialogue_act_labels, np.argwhere(dialogue_act_labels == "AAA_PAD")
-        )
-        frame_labels = np.delete(frame_labels, np.argwhere(frame_labels == "AAA_PAD"))
-        frame_element_labels = np.delete(
-            frame_element_labels, np.argwhere(frame_element_labels == "AAA_PAD")
-        )
-        dialogue_act_labels = np.delete(
-            dialogue_act_labels, np.argwhere(dialogue_act_labels == "O")
-        )
-        frame_labels = np.delete(frame_labels, np.argwhere(frame_labels == "O"))
-        frame_element_labels = np.delete(
-            frame_element_labels, np.argwhere(frame_element_labels == "O")
-        )
-
-        dialogue_act_labels = list(
-            set(
-                [
-                    label.replace("B-", "").replace("I-", "")
-                    for label in dialogue_act_labels
-                ]
-            )
-        )
-        frame_labels = list(
-            set([label.replace("B-", "").replace("I-", "") for label in frame_labels])
-        )
-        frame_element_labels = list(
-            set(
-                [
-                    label.replace("B-", "").replace("I-", "")
-                    for label in frame_element_labels
-                ]
-            )
-        )
-
-        dialogue_act_distribution = []
-        frame_distribution = []
-        frame_element_distribution = []
-        for label in dialogue_act_labels:
-            print(label, distribution["dialogue_act"][label])
-            dialogue_act_distribution.append(distribution["dialogue_act"][label])
-        for label in frame_labels:
-            frame_distribution.append(distribution["frame"][label])
-        for label in frame_element_labels:
-            frame_element_distribution.append(distribution["frame_element"][label])
-
-        np.random.shuffle(self.dataset)
-        folds = [self.dataset[i::10] for i in range(10)]
-        for i, fold in enumerate(folds):
-            print("Iteration {}".format(i))
-            y = OrderedDict()
-            y_true = []
-            y_pred = []
-            for example in fold:
-                new_example = []
-                for token in example["dialogue_act"]:
-                    if token.startswith("B-"):
-                        current_label = token.split("-")[1]
-                        random_label = np.random.choice(
-                            dialogue_act_labels, 1, dialogue_act_distribution
-                        )[0]
-                        new_token = token.replace(current_label, random_label)
-                    else:
-                        new_token = token.replace(current_label, random_label)
-                    new_example.append(new_token)
-                y_true.append(example["dialogue_act"].tolist())
-                y_pred.append(new_example)
-            y["dialogue_act"] = (y_true, y_pred)
-            y_true = []
-            y_pred = []
-            for example in fold:
-                new_example = []
-                for token in example["frame"]:
-                    if token.startswith("B-"):
-                        current_label = token.split("-")[1]
-                        random_label = np.random.choice(
-                            frame_labels, 1, frame_distribution
-                        )[0]
-                        new_token = token.replace(current_label, random_label)
-                    else:
-                        new_token = token.replace(current_label, random_label)
-                    new_example.append(new_token)
-                y_true.append(example["frame"].tolist())
-                y_pred.append(new_example)
-            y["frame"] = (y_true, y_pred)
-            y_true = []
-            y_pred = []
-
-            for example in fold:
-                new_example = []
-                for token in example["frame_element"]:
-                    if token.startswith("B-"):
-                        current_label = token.split("-")[1]
-                        random_label = np.random.choice(
-                            frame_element_labels, 1, frame_element_distribution
-                        )[0]
-                        new_token = token.replace(current_label, random_label)
-                    else:
-                        new_token = token.replace(current_label, random_label)
-                    new_example.append(new_token)
-                y_true.append(example["frame_element"].tolist())
-                y_pred.append(new_example)
-            y["frame_element"] = (y_true, y_pred)
-            print(classification_report(y))
-
-    def statistics(self):
-        avg_length_of_sentence = 0.0
-        total_number_of_dialogue_act = 0
-        total_number_of_frame = 0
-        total_number_of_frame_element = 0
-        dialogue_act_number = dict()
-        frame_number = dict()
-        frame_element_number = dict()
-        lexical_unit_distribution = dict()
-        dialogue_act_predicates = 0.0
-        frame_predicates = 0.0
-        frame_element_predicates = 0.0
-        for example in self.dataset:
-            avg_length_of_sentence += len(example["tokens"])
-            for i, token in enumerate(example["tokens"]):
-                if example["dialogue_act"][i].startswith("B-"):
-                    total_number_of_dialogue_act += 1
-                    name = example["dialogue_act"][i].split("-")[1]
-                    if name not in dialogue_act_number:
-                        dialogue_act_number[name] = 1
-                    else:
-                        dialogue_act_number[name] += 1
-                    dialogue_act_predicates += 1
-                if example["frame"][i].startswith("B-"):
-                    total_number_of_frame += 1
-                    name = example["frame"][i].split("-")[1]
-                    if name not in frame_number:
-                        frame_number[name] = 1
-                    else:
-                        frame_number[name] += 1
-                    frame_predicates += 1
-                if example["frame_element"][i].startswith("B-"):
-                    total_number_of_frame_element += 1
-                    name = example["frame_element"][i].split("-")[1]
-                    if name not in frame_element_number:
-                        frame_element_number[name] = 1
-                    else:
-                        frame_element_number[name] += 1
-                    frame_element_predicates += 1
-                    if name == "Lexical_unit":
-                        index = example["index"][i]
-                        if index not in lexical_unit_distribution:
-                            lexical_unit_distribution[index] = 1
-                        else:
-                            lexical_unit_distribution[index] += 1
-        avg_length_of_sentence = avg_length_of_sentence / len(self.dataset)
-        print("Number of sentences:\t\t\t{}".format(len(self.dataset)))
-        print(
-            "Average length of sentence:\t\t{}".format(round(avg_length_of_sentence, 2))
-        )
-        print("Dialogue act label set:\t\t\t{}".format(len(dialogue_act_number)))
-        print("Frame label set:\t\t\t\t{}".format(len(frame_number)))
-        print("Frame element label set:\t\t{}".format(len(frame_element_number)))
-        print("Total number of dialogue act:\t{}".format(total_number_of_dialogue_act))
-        print("Total number of frame:\t\t\t{}".format(total_number_of_frame))
-        print(
-            "Total number of frame element:\t{}".format(total_number_of_frame_element)
-        )
-        print(
-            "Average dialogue act/sentence:\t{}".format(
-                round(float(total_number_of_dialogue_act) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame/sentence:\t\t\t{}".format(
-                round(float(total_number_of_frame) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame element/sentence:\t{}".format(
-                round(float(total_number_of_frame_element) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame/dialogue act:\t\t{}".format(
-                round(
-                    float(total_number_of_frame) / float(total_number_of_dialogue_act),
-                    2,
-                )
-            )
-        )
-        print(
-            "Average frame element/frame:\t{}".format(
-                round(
-                    float(total_number_of_frame_element) / float(total_number_of_frame),
-                    2,
-                )
-            )
-        )
-        print(
-            "Lexical unit distribution:\t\t{}".format(
-                sorted(
-                    lexical_unit_distribution.items(), key=lambda x: x[1], reverse=True
-                )
-            )
-        )
-
-        distribution = OrderedDict()
-        dialogue_act_distribution = OrderedDict()
-        frame_distribution = OrderedDict()
-        frame_element_distribution = OrderedDict()
-        distribution["dialogue_act"] = dialogue_act_distribution
-        distribution["frame"] = frame_distribution
-        distribution["frame_element"] = frame_element_distribution
-
-        print(
-            "Dialogue act distribution:\t\t{}".format(
-                sorted(dialogue_act_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in dialogue_act_number.items():
-            dialogue_act_distribution[label] = float(number) / dialogue_act_predicates
-        print(
-            "Frame distribution:\t\t\t\t{}".format(
-                sorted(frame_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in frame_number.items():
-            frame_distribution[label] = float(number) / frame_predicates
-        print(
-            "Frame element distribution:\t\t{}".format(
-                sorted(frame_element_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in frame_element_number.items():
-            frame_element_distribution[label] = float(number) / frame_element_predicates
-
-        return distribution
-
-    def statistics_benchmark(self):
-        avg_length_of_sentence = 0.0
-        total_number_of_dialogue_act = 0
-        total_number_of_frame = 0
-        total_number_of_intent = 0
-        total_number_of_frame_element = 0
-        dialogue_act_number = dict()
-        frame_number = dict()
-        frame_element_number = dict()
-        intent_number = dict()
-        lexical_unit_distribution = dict()
-        dialogue_act_predicates = 0.0
-        frame_predicates = 0.0
-        frame_element_predicates = 0.0
-        intent_predicates = 0.0
-        for example in self.dataset:
-            avg_length_of_sentence += len(example["tokens"])
-            for i, token in enumerate(example["tokens"]):
-                dialogue_act_check = False
-                frame_check = False
-                if example["dialogue_act"][i].startswith("B-"):
-                    dialogue_act_check = True
-                    total_number_of_dialogue_act += 1
-                    name = example["dialogue_act"][i][2:]
-                    if name not in dialogue_act_number:
-                        dialogue_act_number[name] = 1
-                    else:
-                        dialogue_act_number[name] += 1
-                    dialogue_act_predicates += 1
-                if example["frame"][i].startswith("B-"):
-                    frame_check = True
-                    total_number_of_frame += 1
-                    name = example["frame"][i][2:]
-                    if name not in frame_number:
-                        frame_number[name] = 1
-                    else:
-                        frame_number[name] += 1
-                    frame_predicates += 1
-                if dialogue_act_check and frame_check:
-                    name = (
-                        example["dialogue_act"][i][2:] + "_" + example["frame"][i][2:]
-                    )
-                    total_number_of_intent += 1
-                    if name not in intent_number:
-                        intent_number[name] = 1
-                    else:
-                        intent_number[name] += 1
-                    intent_predicates += 1
-                if example["frame_element"][i].startswith("B-"):
-                    total_number_of_frame_element += 1
-                    name = example["frame_element"][i][2:]
-                    if name not in frame_element_number:
-                        frame_element_number[name] = 1
-                    else:
-                        frame_element_number[name] += 1
-                    frame_element_predicates += 1
-                    if name == "Lexical_unit":
-                        index = example["index"][i]
-                        if index not in lexical_unit_distribution:
-                            lexical_unit_distribution[index] = 1
-                        else:
-                            lexical_unit_distribution[index] += 1
-        avg_length_of_sentence = avg_length_of_sentence / len(self.dataset)
-        print("Number of sentences:\t\t\t{}".format(len(self.dataset)))
-        print(
-            "Average length of sentence:\t\t{}".format(round(avg_length_of_sentence, 2))
-        )
-        print("Dialogue act label set:\t\t\t{}".format(len(dialogue_act_number)))
-        print("Frame label set:\t\t\t\t{}".format(len(frame_number)))
-        print("Frame element label set:\t\t{}".format(len(frame_element_number)))
-        print("Intent label set:\t\t\t\t{}".format(len(intent_number)))
-        print("Total number of dialogue act:\t{}".format(total_number_of_dialogue_act))
-        print("Total number of frame:\t\t\t{}".format(total_number_of_frame))
-        print("Total number of intent:\t\t\t{}".format(total_number_of_intent))
-        print(
-            "Total number of frame element:\t{}".format(total_number_of_frame_element)
-        )
-        print(
-            "Average dialogue act/sentence:\t{}".format(
-                round(float(total_number_of_dialogue_act) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame/sentence:\t\t\t{}".format(
-                round(float(total_number_of_frame) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average intent/sentence:\t\t\t{}".format(
-                round(float(total_number_of_intent) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame element/sentence:\t{}".format(
-                round(float(total_number_of_frame_element) / len(self.dataset), 2)
-            )
-        )
-        print(
-            "Average frame/dialogue act:\t\t{}".format(
-                round(
-                    float(total_number_of_frame) / float(total_number_of_dialogue_act),
-                    2,
-                )
-            )
-        )
-        print(
-            "Average frame element/frame:\t{}".format(
-                round(
-                    float(total_number_of_frame_element) / float(total_number_of_frame),
-                    2,
-                )
-            )
-        )
-        print(
-            "Average frame element/intent:\t{}".format(
-                round(
-                    float(total_number_of_frame_element)
-                    / float(total_number_of_intent),
-                    2,
-                )
-            )
-        )
-        print(
-            "Lexical unit distribution:\t\t{}".format(
-                sorted(
-                    lexical_unit_distribution.items(), key=lambda x: x[1], reverse=True
-                )
-            )
-        )
-
-        distribution = OrderedDict()
-        dialogue_act_distribution = OrderedDict()
-        frame_distribution = OrderedDict()
-        frame_element_distribution = OrderedDict()
-        distribution["dialogue_act"] = dialogue_act_distribution
-        distribution["frame"] = frame_distribution
-        distribution["frame_element"] = frame_element_distribution
-
-        print(
-            "Dialogue act distribution:\t\t{}".format(
-                sorted(dialogue_act_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in dialogue_act_number.items():
-            dialogue_act_distribution[label] = float(number) / dialogue_act_predicates
-        print(
-            "Frame distribution:\t\t\t\t{}".format(
-                sorted(frame_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in frame_number.items():
-            frame_distribution[label] = float(number) / frame_predicates
-        print(
-            "Frame element distribution:\t\t{}".format(
-                sorted(frame_element_number.items(), key=lambda x: x[1], reverse=True)
-            )
-        )
-        for label, number in frame_element_number.items():
-            frame_element_distribution[label] = float(number) / frame_element_predicates
-
-        return distribution
 
     def get_train_sampler(self):
         return self.samplerTrain
